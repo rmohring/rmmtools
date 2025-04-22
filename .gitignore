@@ -1,0 +1,41 @@
+# Code-related and logs, etc
+__pycache__
+*.pyc
+.ipynb_checkpoints
+*.so
+*.c
+.vscode/
+*.mypy_cache/**
+.DS_Store
+/.p*
+dask-worker*
+*.swp
+/py/opdata_import
+.vs
+.idea
+.env
+venv
+*.log
+
+# Typical Pandas data formats
+*.h5
+*.feather
+*.pq
+*.parquet
+/data
+
+# Don't check in your creds and keys
+*.user
+*.pem
+*.pfx
+*.pwd
+.dbconfig
+.dbcreds
+
+# Optimization-model-related files
+*.lp
+*.mps
+*.ilp
+
+# Any dir called "hide" won't get checked in, so you can stash local stuff temporarily
+hide
