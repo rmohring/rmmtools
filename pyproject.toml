@@ -1,0 +1,26 @@
+[build-system]
+requires = ["hatchling >= 1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "rmmtools"
+version = "0.1.0"
+authors = [
+    {name = "Rick Mohring", email = "rmmohring@live.com"}
+]
+description = "RMM Python tools and utilities"
+readme = "README.md"
+requires-python = ">=3.7"
+dependencies = [
+    "pandas", "scikit-learn", "tabulate", "pyyaml"
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license = "GPL-3.0-or-later"
+license-files = ["LICEN[CS]E*"]
+
+[project.urls]
+Homepage = "https://github.com/rmohring/rmmtools"
+Issues = "https://github.com/rmohring/rmmtools/issues"
