@@ -254,31 +254,45 @@ def listify(
     stretch_length: int = 0,
     make_strings: bool = False,
 ) -> list:
-    """Forces the input to be returned as a Python list. Accepts single
-    values of strings or numbers, tuples, lists, numpy arrays, or
-    anything that has a tolist() method.
+    """Forces the input to be returned as a Python list.
+
+    Type dispatch order:
+        - None               → []
+        - str                → [str]  (str is Iterable, so checked first)
+        - list / tuple       → list(thing)
+        - dict               → list of its *values*
+        - has tolist()       → thing.tolist()  (np.ndarray, pd.Series,
+                               pd.Index, pd.DatetimeIndex, etc.)
+        - any other Iterable → list(thing)  (generators, sets, …)
+        - anything else      → [thing]
 
     Args:
-        thing (multiple types): Single item or list-like that will be
-            converted into a Python list.
-        stretch_length (int, optional): If the stretch_length is larger
-            than the length of the provided `thing`, the resulting list
-            will be extended to a new length equal to `stretch_length`
-            by repeating the last element of the input `thing`.
-        make_strings (bool, optional): If True, every item in the list
-            will be converted to str. Defaults to False.
+        thing: Single item or collection to convert.
+        stretch_length (int, optional): If larger than the resulting list,
+            extends it by repeating the last element up to this length.
+            Ignored if the result is empty. Defaults to 0 (no stretch).
+        make_strings (bool, optional): If True, every item in the returned
+            list is cast to str. Defaults to False.
     """
-    result: List[object] = []
-
-    if isinstance(thing, Iterable) and not isinstance(thing, str):
+    if thing is None:
+        result = []
+    elif isinstance(thing, str):
+        result = [thing]
+    elif isinstance(thing, (list, tuple)):
         result = list(thing)
-    elif thing is not None:
+    elif isinstance(thing, dict):
+        result = list(thing.values())
+    elif hasattr(thing, "tolist"):
+        result = thing.tolist()
+    elif isinstance(thing, Iterable):
+        result = list(thing)
+    else:
         result = [thing]
 
     if make_strings:
         result = [str(x) for x in result]
 
-    if thing is not None and stretch_length > len(result):
+    if result and stretch_length > len(result):
         result.extend([result[-1]] * (stretch_length - len(result)))
 
     return result
