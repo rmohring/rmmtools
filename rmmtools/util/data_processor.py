@@ -2,7 +2,7 @@ import functools
 
 from abc import ABC, abstractmethod
 
-import util.general as gen
+from .general import get_now_local_and_utc, get_logger
 
 
 class DataProcessor(ABC):
@@ -11,14 +11,14 @@ class DataProcessor(ABC):
 
         self.args = self.setup_command_line()
         try:
-            if self.args.debug == True:
+            if self.args.debug:
                 log_level = "DEBUG"
-        except:
+        except AttributeError:
             pass
 
-        self._startup_dttm = gen.get_now_local_and_utc()
+        self._startup_dttm = get_now_local_and_utc()
 
-        self.log = gen.get_logger(shortname, level=log_level)
+        self.log = get_logger(shortname, level=log_level)
         self.log.info("DataProcessor Instantiated")
 
         self._errors = []

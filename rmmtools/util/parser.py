@@ -4,7 +4,7 @@ from typing import Any, List, Optional
 
 import pandas as pd
 
-from util.general import (
+from .general import (
     listify,
     check_not_none,
     get_val_or_alt_or_raise,
@@ -199,7 +199,7 @@ class CommandLineParser(argparse.ArgumentParser):
         return
 
     def _validate_std_args(self):
-        (args, _) = self.parse_known_args()
+        args, _ = self.parse_known_args()
 
         # Valid situations are that b < e is specified, OR just d
         if ("b" in self._std_opts) and (args.begin is not None):

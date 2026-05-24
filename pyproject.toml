@@ -4,13 +4,13 @@ build-backend = "hatchling.build"
 
 [project]
 name = "rmmtools"
-version = "0.1.0"
+version = "0.2.0"
 authors = [
     {name = "Rick Mohring", email = "rmmohring@live.com"}
 ]
 description = "RMM Python tools and utilities"
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.10"
 dependencies = [
     "pandas", "scikit-learn", "tabulate", "pyyaml"
 ]

@@ -178,7 +178,7 @@ class RMM_DataFrameUtil(AccessorBase):
         field: str = None,
         start: Optional[Union[str, np.datetime64]] = None,
         end: Optional[Union[str, np.datetime64]] = None,
-        eopen: bool = False,
+        eopen: bool = True,
     ) -> pd.DataFrame:
         if field is None:
             raise ValueError("Need to specify field to use as the date")
