@@ -159,17 +159,21 @@ def check_not_none(
     raise_on_fail: bool = True,
     msg: str = None,
 ) -> bool:
-    """Raises an exception if the passed in value is None in the case of a single
-    value. If an Iterable, by default will raise an error if any contained values
-    are None. This can be overridden with `require_all = False`, in which case it
-    will not raise an error as long as at least one of the values is not None.
+    """Checks that a value (or collection of values) is not None/NaN.
+
+    Behavior by type:
+        - None: fails
+        - list/tuple: checks each element for None
+        - dict: checks each *value* for None
+        - pd.Series: checks for None/NaN entries
+        - pd.DataFrame: checks for None/NaN entries
+        - anything else (str, int, etc.): passes if not None
 
     Args:
-        val (Union[Any, Iterable], required): Single value or interable to check
-            for None-ness.
-        require_all (bool, optional): If True, this will raise an error if any
-            values are None. If False, this will not raise an error as long as
-            at least one of the values is not None. Defaults to True.
+        val (Union[Any, Iterable], required): Single value or collection to check.
+        require_all (bool, optional): If True, fails if *any* element is
+            None/NaN. If False, fails only if *all* elements are None/NaN.
+            Defaults to True.
         raise_on_fail (bool, optional): If True, will raise a ValueError on fail
             condition. If False, will return the condition as a bool.
         msg (str, optional): Message to raise as ValueError. Defaults to
@@ -178,19 +182,32 @@ def check_not_none(
     Raises:
         ValueError: If it fails and `raise_on_fail`==True
     """
-    ok = require_all
+    import pandas as pd
+
     if val is None:
         ok = False
+    elif isinstance(val, (list, tuple)):
+        if require_all:
+            ok = all(v is not None for v in val)
+        else:
+            ok = any(v is not None for v in val)
+    elif isinstance(val, dict):
+        if require_all:
+            ok = all(v is not None for v in val.values())
+        else:
+            ok = any(v is not None for v in val.values())
+    elif isinstance(val, pd.Series):
+        if require_all:
+            ok = not val.isna().any()
+        else:
+            ok = val.notna().any()
+    elif isinstance(val, pd.DataFrame):
+        if require_all:
+            ok = not val.isna().any().any()
+        else:
+            ok = val.notna().any().any()
     else:
-        for v in listify(val):
-            if require_all:
-                if v is None:
-                    ok = False
-                    break
-            else:
-                if v is not None:
-                    ok = True
-                    break
+        ok = True
 
     if not ok and raise_on_fail:
         if msg is None:
