@@ -269,7 +269,7 @@ def listify(
 
 ## Performance monitoring functions
 def check_mem(thresh: Optional[float] = None, frac: float = 0.9) -> int:
-    """Simple memory usage checker for LINUX that can be used to terminate or
+    """Cross-platform memory usage checker that can be used to terminate or
     modify the current program if a threshold is exceeded.
 
     Args:
@@ -286,9 +286,64 @@ def check_mem(thresh: Optional[float] = None, frac: float = 0.9) -> int:
     Raises:
         ValueError: If used memory exceeds the specified / calculated threshold
     """
-    total_memory, used_memory, free_memory = map(
-        int, os.popen("free -t -m").readlines()[-1].split()[1:]
-    )
+    import platform
+
+    system = platform.system()
+
+    if system == "Linux":
+        meminfo = {}
+        with open("/proc/meminfo") as f:
+            for line in f:
+                parts = line.split()
+                meminfo[parts[0].rstrip(":")] = int(parts[1])
+        total_memory = meminfo["MemTotal"] // 1024
+        available = meminfo.get("MemAvailable", meminfo.get("MemFree", 0)) // 1024
+        used_memory = total_memory - available
+
+    elif system == "Windows":
+        import ctypes
+
+        class MEMORYSTATUSEX(ctypes.Structure):
+            _fields_ = [
+                ("dwLength", ctypes.c_ulong),
+                ("dwMemoryLoad", ctypes.c_ulong),
+                ("ullTotalPhys", ctypes.c_ulonglong),
+                ("ullAvailPhys", ctypes.c_ulonglong),
+                ("ullTotalPageFile", ctypes.c_ulonglong),
+                ("ullAvailPageFile", ctypes.c_ulonglong),
+                ("ullTotalVirtual", ctypes.c_ulonglong),
+                ("ullAvailVirtual", ctypes.c_ulonglong),
+                ("ullAvailExtendedVirtual", ctypes.c_ulonglong),
+            ]
+
+        stat = MEMORYSTATUSEX()
+        stat.dwLength = ctypes.sizeof(stat)
+        ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(stat))
+        total_memory = stat.ullTotalPhys // (1024 * 1024)
+        used_memory = total_memory - stat.ullAvailPhys // (1024 * 1024)
+
+    elif system == "Darwin":
+        import subprocess
+
+        result = subprocess.run(
+            ["sysctl", "-n", "hw.memsize"], capture_output=True, text=True, check=True
+        )
+        total_memory = int(result.stdout.strip()) // (1024 * 1024)
+        result = subprocess.run(
+            ["vm_stat"], capture_output=True, text=True, check=True
+        )
+        # vm_stat reports in pages (typically 4096 bytes)
+        pages_free = 0
+        for line in result.stdout.splitlines():
+            if "Pages free" in line:
+                pages_free += int(line.split()[-1].rstrip("."))
+            elif "Pages inactive" in line:
+                pages_free += int(line.split()[-1].rstrip("."))
+        used_memory = total_memory - (pages_free * 4096) // (1024 * 1024)
+
+    else:
+        raise NotImplementedError(f"check_mem not supported on {system}")
+
     if thresh is None:
         thresh = total_memory * frac
 
