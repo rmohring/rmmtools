@@ -329,9 +329,7 @@ def check_mem(thresh: Optional[float] = None, frac: float = 0.9) -> int:
             ["sysctl", "-n", "hw.memsize"], capture_output=True, text=True, check=True
         )
         total_memory = int(result.stdout.strip()) // (1024 * 1024)
-        result = subprocess.run(
-            ["vm_stat"], capture_output=True, text=True, check=True
-        )
+        result = subprocess.run(["vm_stat"], capture_output=True, text=True, check=True)
         # vm_stat reports in pages (typically 4096 bytes)
         pages_free = 0
         for line in result.stdout.splitlines():
